@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Lumenfall, run summary">
+  <rect width="800" height="600" fill="#1f4bff"/>
+  <rect width="800" height="8" fill="#ff6a3d"/>
+  <text x="400" y="150" text-anchor="middle" font-family="system-ui, sans-serif" font-size="20" letter-spacing="4" fill="#ffffff">LUMENFALL</text>
+  <text x="400" y="250" text-anchor="middle" font-family="system-ui, sans-serif" font-size="36" font-weight="700" fill="#ffffff">Run summary</text>
+  <text x="400" y="300" text-anchor="middle" font-family="system-ui, sans-serif" font-size="22" fill="#f7f7f5">Screen 4 of 4</text>
+  <rect x="280" y="380" width="240" height="70" rx="14" fill="#f7f7f5"/>
+  <text x="400" y="425" text-anchor="middle" font-family="system-ui, sans-serif" font-size="30" font-weight="700" fill="#111318">3 bosses</text>
+  <rect x="330" y="480" width="140" height="10" rx="5" fill="#ff6a3d"/>
+</svg>

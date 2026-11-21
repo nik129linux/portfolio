@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Hand Hygiene Watch, silent reminder">
+  <rect width="800" height="600" fill="#f7f7f5"/>
+  <rect width="800" height="8" fill="#1f4bff"/>
+  <text x="400" y="150" text-anchor="middle" font-family="system-ui, sans-serif" font-size="20" letter-spacing="4" fill="#4a4f5c">HAND HYGIENE WATCH</text>
+  <text x="400" y="250" text-anchor="middle" font-family="system-ui, sans-serif" font-size="36" font-weight="700" fill="#111318">Silent reminder</text>
+  <text x="400" y="300" text-anchor="middle" font-family="system-ui, sans-serif" font-size="22" fill="#4a4f5c">Screen 1 of 4</text>
+  <circle cx="400" cy="420" r="62" fill="#efeee9"/>
+  <circle cx="400" cy="420" r="40" fill="#1f4bff"/>
+  <circle cx="400" cy="420" r="16" fill="#f7f7f5"/>
+</svg>

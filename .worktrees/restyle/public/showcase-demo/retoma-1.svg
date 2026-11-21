@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Retoma, resume card">
+  <rect width="800" height="600" fill="#f7f7f5"/>
+  <rect width="800" height="8" fill="#1f4bff"/>
+  <text x="400" y="150" text-anchor="middle" font-family="system-ui, sans-serif" font-size="20" letter-spacing="4" fill="#4a4f5c">RETOMA</text>
+  <text x="400" y="250" text-anchor="middle" font-family="system-ui, sans-serif" font-size="36" font-weight="700" fill="#111318">Resume card</text>
+  <text x="400" y="300" text-anchor="middle" font-family="system-ui, sans-serif" font-size="22" fill="#4a4f5c">Screen 1 of 4</text>
+  <rect x="270" y="370" width="260" height="150" rx="14" fill="#efeee9"/>
+  <circle cx="400" cy="430" r="26" fill="#1f4bff"/>
+  <rect x="330" y="478" width="140" height="10" rx="5" fill="#dcdcd6"/>
+</svg>
