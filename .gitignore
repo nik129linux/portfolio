@@ -11,3 +11,4 @@ test-results
 .server.pid
 evidence/
 demo-src/
+.muse/

@@ -8,15 +8,15 @@ import Hero from "@/components/sections/Hero";
 import Now from "@/components/sections/Now";
 import Projects from "@/components/sections/Projects";
 import Testimonials from "@/components/sections/Testimonials";
-import StackIcons from "@/components/ui/StackIcons";
 
 export default function Home() {
   return (
     <>
+      {/* Real top of the page for "Back to top": #home sits below the 76px header, so it stops short. */}
+      <div id="top" aria-hidden="true" />
       <Header />
-      <main>
+      <main className="relative">
         <Hero />
-        <StackIcons />
         <About />
         <Build />
         <Projects />

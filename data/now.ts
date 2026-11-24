@@ -4,10 +4,11 @@ export type NowData = {
 };
 
 export const now: NowData = {
-  intro: "[One or two sentences about what you are focused on right now]",
+  intro: "I build AI features that survive production: tested, bounded by consent and deployed, not demoed once.",
   items: [
-    { label: "[Focus 1]", value: "[What you are building]" },
-    { label: "[Focus 2]", value: "[What you are learning]" },
-    { label: "[Focus 3]", value: "[What you are reading]" },
+    { label: "Shipping", value: "AI as a swappable layer: provider chains, fallbacks and consent gates in CanTrack, CotizaIA, Acompaña and Retoma, plus a CLIP vision check." },
+    { label: "RAG", value: "Retrieval with evals in CotizaIA: a pgvector memory, cited estimates, and 55% lower error than a fixed catalog." },
+    { label: "Cloud", value: "AWS as code: a Terraform landing zone with multi-region CloudTrail, KMS, alarms and no SSH." },
+    { label: "Agents", value: "Building with Claude Code and opencode, and learning MCP so agents call real tools behind approval gates." },
   ],
 };

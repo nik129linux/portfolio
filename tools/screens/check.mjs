@@ -2,23 +2,32 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 
-const slugs = ["retoma", "acompana", "hand-hygiene-watch", "lumenfall"];
+const SPECS = {
+  retoma: { min: 4, max: 6, w: 1280, h: 800 },
+  acompana: { min: 4, max: 6, w: 1280, h: 800 },
+  "hand-hygiene-watch": { min: 4, max: 6, w: 1280, h: 800 },
+  lumenfall: { min: 4, max: 6, w: 1280, h: 800 },
+  cantrack: { min: 3, max: 6, w: 780, h: 1688 },
+  cotizaia: { min: 3, max: 3, w: 1280, h: 800 },
+};
+const slugs = Object.keys(SPECS);
 let fail = 0;
 const bad = (m) => { console.log("FAIL", m); fail++; };
 const gray = (f) => execFileSync("ffmpeg", ["-v", "error", "-i", f, "-vf", "scale=64:40,format=gray", "-f", "rawvideo", "-"]);
 
 for (const s of slugs) {
+  const spec = SPECS[s];
   const man = `public/projects/${s}/screens.json`;
   if (!fs.existsSync(man)) { bad(`${man} missing`); continue; }
   const screens = JSON.parse(fs.readFileSync(man, "utf8"));
-  if (!Array.isArray(screens) || screens.length < 4 || screens.length > 6) bad(`${s} has ${screens.length} screens, want 4-6`);
+  if (!Array.isArray(screens) || screens.length < spec.min || screens.length > spec.max) bad(`${s} has ${screens.length} screens, want ${spec.min}-${spec.max}`);
   const sigs = [];
   for (const sc of screens) {
     if (typeof sc.caption !== "string" || sc.caption.length < 3 || sc.caption.length > 60) bad(`${s} caption "${sc.caption}" must be 3-60 chars`);
     const f = `public${sc.src}`;
     if (!sc.src?.startsWith(`/projects/${s}/`) || !f.endsWith(".webp") || !fs.existsSync(f)) { bad(`${s} ${sc.src} missing or not webp`); continue; }
     const p = JSON.parse(execFileSync("ffprobe", ["-v", "error", "-show_entries", "stream=width,height", "-of", "json", f]).toString()).streams[0];
-    if (p.width !== 1280 || p.height !== 800) bad(`${f} is ${p.width}x${p.height}, want 1280x800`);
+    if (p.width !== spec.w || p.height !== spec.h) bad(`${f} is ${p.width}x${p.height}, want ${spec.w}x${spec.h}`);
     const kb = fs.statSync(f).size / 1024;
     if (kb > 250) bad(`${f} ${kb.toFixed(0)}KB > 250KB`);
     const g = gray(f); const mean = g.reduce((a, b) => a + b, 0) / g.length;

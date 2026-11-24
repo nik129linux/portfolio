@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
-/* Palette "Sky on cream", 2026-11-19. Cream paper, ink text, taupe wordmarks, one
-   light-blue accent. Contrast (approx): ink on paper 15.2, ink on accent 10.6,
-   accent-strong on paper 5.6, white on accent-deep 15.8. Purple is banned (AI-site tell). */
+/* Palette "Cobalt on cream", 2026-11-22 (was "Sky on cream"). Cream paper, ink text, taupe
+   wordmarks, ONE saturated cobalt accent used for actions and full-bleed chapters.
+   Text on cobalt is paper (accent-ink). Contrast (approx): ink on paper 15.2, paper on accent
+   5.5, accent-strong on paper 6.6. Purple is banned (AI-site tell). */
 :root {
   --paper: #f3ece3; /* cream page */
   --paper-2: #fbf9f6; /* white-ish chapters, cards */
@@ -11,11 +12,11 @@
   --taupe: #8b7f72; /* section wordmarks (real h2s): 3.3:1 on paper, passes large-text AA */
   --taupe-soft: #a69a8c; /* hero wordmark only: aria-hidden decoration, exempt from contrast */
   --line: #e4dbd0;
-  --accent: #9cc4ff; /* light blue: the only action fill, ink text on it */
-  --accent-soft: #d9e7fb; /* tint for chips and badges */
-  --accent-strong: #2457d6; /* links, focus, active chip text on cream */
-  --accent-deep: #10245e; /* tile and card footers, text-only tiles */
-  --accent-ink: #191919;
+  --accent: #2340ff; /* cobalt: the only action fill and chapter colour, paper text on it */
+  --accent-soft: #dfe3ff; /* pale cobalt tint for chips and badges, ink text */
+  --accent-strong: #1a2fd0; /* links, focus, accent text on cream */
+  --accent-deep: #0d1a80; /* deep cobalt: depth inside cobalt chapters, dark tiles */
+  --accent-ink: var(--paper); /* text on accent */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --dur-fast: 180ms;
@@ -59,13 +60,16 @@ h1, h2, h3 { font-family: var(--font-bricolage), system-ui, sans-serif; letter-s
 img { max-width: 100%; }
 section[id] { scroll-margin-top: 96px; }
 :focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 3px; }
-::selection { background: var(--accent); color: var(--ink); }
+/* On cobalt chapters the cobalt ring would vanish (1.4:1): use the text-on-accent colour. */
+.bg-accent :focus-visible { outline-color: var(--accent-ink); }
+::selection { background: var(--accent); color: var(--accent-ink); }
 
-/* Giant wordmark: Bricolage 800, taupe, tight. Sized so "CASANOVA" fits the viewport. */
+/* Giant wordmark: Bricolage 800, cobalt on cream (paper inside cobalt chapters), tight.
+   The hero name stays taupe: it sits over the cobalt blob and would vanish into it. */
 .wordmark {
   font-family: var(--font-bricolage), system-ui, sans-serif;
   font-weight: 800;
-  color: var(--taupe);
+  color: var(--accent);
   letter-spacing: -0.065em;
   line-height: 0.8;
   user-select: none;
@@ -90,6 +94,13 @@ section[id] { scroll-margin-top: 96px; }
   transition: opacity 500ms var(--ease-out), transform 700ms var(--ease-out);
 }
 .reveal[data-shown] .ch { opacity: 1; transform: none; }
+
+/* ScrollSpread: the hero name comes apart on scroll. --spread 0..1 from JS, --o (-1..1) and
+   --a (|o|) per letter. Uses translate/rotate so the reveal's transform stays untouched. */
+.spread .ch {
+  translate: calc(var(--o, 0) * var(--spread, 0) * 14vw) calc(var(--spread, 0) * (-5vh - var(--a, 0) * 9vh));
+  rotate: calc(var(--o, 0) * var(--spread, 0) * 16deg);
+}
 
 /* Floating objects: slow yoyo drift, offset per object through --float-* vars. */
 @keyframes float-drift {
@@ -131,12 +142,13 @@ body::after {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; }
   .reveal .ch { opacity: 1; transform: none; }
+  .spread .ch { translate: none; rotate: none; }
   [data-testid="parallax"] [data-speed] { transform: none !important; }
   [data-tilt] { transform: none !important; }
 }
 
 @layer components {
-/* Buttons: pill, 48px, lit from above, 0.97 press. Primary = light-blue fill with ink text. */
+/* Buttons: pill, 48px, lit from above, 0.97 press. Primary = cobalt fill with paper text. */
 .btn {
   position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
   min-height: 3rem; padding-inline: 1.375rem; border-radius: 999px; font-weight: 600; font-size: 1rem;
@@ -147,8 +159,8 @@ body::after {
 .btn-icon { width: 3rem; padding-inline: 0; }
 .btn .btn-arrow { transition: transform var(--dur-hover) var(--ease-out); }
 .btn-primary {
-  color: var(--ink); background: var(--accent);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.55), inset 0 -1px 0 rgb(36 87 214 / 0.25), 0 1px 2px rgb(16 36 94 / 0.25), 0 8px 18px -8px rgb(36 87 214 / 0.55);
+  color: var(--accent-ink); background: var(--accent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3), inset 0 -1px 0 rgb(35 64 255 / 0.25), 0 1px 2px rgb(13 26 128 / 0.25), 0 8px 18px -8px rgb(35 64 255 / 0.55);
 }
 .btn-secondary {
   color: var(--ink); background: var(--paper-2);
@@ -158,7 +170,7 @@ body::after {
 .btn[aria-disabled="true"] { cursor: default; }
 .btn[aria-disabled="true"]:active { transform: none; }
 @media (hover: hover) and (pointer: fine) {
-  .btn-primary:hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), inset 0 -1px 0 rgb(36 87 214 / 0.3), 0 2px 4px rgb(16 36 94 / 0.25), 0 12px 24px -8px rgb(36 87 214 / 0.65); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), inset 0 -1px 0 rgb(35 64 255 / 0.3), 0 2px 4px rgb(13 26 128 / 0.25), 0 12px 24px -8px rgb(35 64 255 / 0.65); }
   .btn-secondary:hover { box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgb(25 25 25 / 0.2), 0 2px 4px rgb(25 25 25 / 0.08), 0 8px 18px -8px rgb(25 25 25 / 0.2); }
   .btn-dark:hover { transform: translateY(-1px); }
   .btn:not([aria-disabled="true"]):hover .btn-arrow { transform: translateX(3px); }
@@ -172,7 +184,7 @@ body::after {
   transition: background-color var(--dur-hover) var(--ease-out), color var(--dur-hover) var(--ease-out), box-shadow var(--dur-hover) var(--ease-out), transform 100ms var(--ease-out);
 }
 .chip:active { transform: scale(0.97); }
-.chip[aria-pressed="true"] { color: var(--ink); background: var(--accent); box-shadow: 0 0 0 1px rgb(36 87 214 / 0.35); }
+.chip[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent); box-shadow: 0 0 0 1px rgb(35 64 255 / 0.35); }
 @media (hover: hover) { .chip[aria-pressed="false"]:hover { color: var(--ink); box-shadow: 0 0 0 1px rgb(25 25 25 / 0.25); } }
 
 /* Form surfaces: the panel is a raised sheet; fields are inset wells with a blue focus halo. */
@@ -183,9 +195,38 @@ body::after {
   transition: box-shadow var(--dur-hover) var(--ease-out), background-color var(--dur-hover) var(--ease-out);
 }
 .field:hover { box-shadow: inset 0 1px 2px rgb(25 25 25 / 0.06), 0 0 0 1px rgb(25 25 25 / 0.2); }
-.field:focus { outline: none; background: #fff; box-shadow: 0 0 0 1px var(--accent-strong), 0 0 0 4px rgb(36 87 214 / 0.18); }
+.field:focus { outline: none; background: #fff; box-shadow: 0 0 0 1px var(--accent-strong), 0 0 0 4px rgb(35 64 255 / 0.18); }
 .soon { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.125rem 0.5rem; border-radius: 999px; background: var(--paper); color: var(--ink-2); }
 
 /* The nav pill: solid ink. No glass; it has to stay legible over any chapter. */
 .nav-pill { background: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 14px 30px -12px rgb(25 25 25 / 0.45); }
 }
+
+/* Closing call to action: the whole footer is an arch of light, cream at the top (it melts into the
+   contact section above) fading through cobalt to deep navy at the bottom, no box around it. The
+   statement and a tilted glass button sit in the dark. */
+.cta-footer {
+  display: flex; flex-direction: column; min-height: clamp(34rem, 92svh, 58rem);
+  background: radial-gradient(ellipse 85% 100% at 50% 100%, #050a2e 0%, var(--accent-deep) 30%, var(--accent) 56%, #9aa8ff 78%, var(--paper) 96%);
+}
+.cta-arch {
+  display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center;
+  padding: 3rem 0 1rem; text-align: center;
+}
+.cta-title {
+  font-family: var(--font-bricolage), system-ui, sans-serif; font-weight: 800; color: var(--paper-2);
+  font-size: clamp(2.75rem, 8vw, 6.5rem); line-height: 0.92; letter-spacing: -0.04em;
+}
+.cta-hi {
+  display: inline-flex; align-items: center; min-height: 3rem; margin-top: 1.5rem; padding: 0.6rem 1.5rem;
+  font-family: var(--font-bricolage), system-ui, sans-serif; font-weight: 700; font-size: 1.25rem; color: var(--paper-2);
+  border-radius: 14px; background: rgb(255 255 255 / 0.12); border: 1px solid rgb(255 255 255 / 0.22);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 14px 30px -12px rgb(0 0 0 / 0.55);
+  transform: rotate(-4deg);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cta-hi { transition: transform 0.4s var(--ease-out), background-color 0.3s; }
+  .cta-hi:hover { transform: rotate(0deg) translateY(-2px); background: rgb(255 255 255 / 0.2); }
+}
+.cta-footer :focus-visible { outline-color: var(--paper-2); }

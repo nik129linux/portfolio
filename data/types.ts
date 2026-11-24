@@ -23,6 +23,7 @@ export type Project = {
   title: string;
   kind: "Desktop" | "Mobile" | "Smartwatch" | "Video game" | "Web" | "Tool";
   summary: string;
+  proof?: string[]; // verified engineering facts shown in the detail panel (deploys, tests, security, AI)
   stack: string[];
   github: string;
   demo?: string; // live link (Vercel) when it can run in a browser

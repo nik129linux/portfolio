@@ -1,0 +1,40 @@
+/* "What I build": a pinned cobalt chapter. The track is the timeline (70svh of scroll per group
+   plus one screen for the stage); the stage sticks while the logo slabs fly through. In list mode
+   (phones, reduced motion, no WebGL) only .build-list renders. Colours are tokens only. */
+/* Full-bleed: the track breaks out of the 1500px container so the canvas spans the viewport (a slab
+   was cut at the container edge). The section clips the overflow on the x axis only. */
+.build-track { position: relative; height: calc(var(--steps, 4) * 70svh + 100svh); margin-inline: calc(50% - 50vw); }
+#build { overflow-x: clip; }
+.build-stage { position: sticky; top: 0; height: 100svh; overflow: clip; }
+.build-canvas { position: absolute; inset: 0; }
+
+/* Words stay real HTML over the canvas. All slides share one spot; only the one in focus shows. */
+.build-hud { position: absolute; inset: 0; display: grid; align-items: center; pointer-events: none; }
+.build-slide {
+  grid-area: 1 / 1; max-width: min(58vw, 52rem); padding-left: max(clamp(1rem, 4vw, 4rem), calc((100vw - 1500px) / 2 + 2rem));
+  opacity: 0; transform: translate3d(0, 2.5rem, 0);
+  transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+}
+.build-slide[data-active="true"] { opacity: 1; transform: none; }
+
+.build-title {
+  font-family: var(--font-bricolage), system-ui, sans-serif; font-weight: 800; letter-spacing: -0.045em;
+  line-height: 0.86; color: var(--accent-ink); font-size: clamp(3.5rem, 11vw, 12rem);
+}
+.build-title-list { font-size: clamp(3rem, 14vw, 8rem); }
+
+.build-items { display: flex; flex-wrap: wrap; gap: 0.625rem; margin-top: 1.75rem; }
+.build-items li {
+  display: inline-flex; align-items: center; gap: 0.5rem; border-radius: 999px;
+  background: var(--paper-2); color: var(--ink); font-weight: 600;
+}
+.build-items-sm li { padding: 0.5rem 1rem; font-size: 1rem; }
+.build-items-lg li { padding: 0.625rem 1.125rem; font-size: 1.125rem; }
+.build-items img { width: 1.375rem; height: 1.375rem; }
+
+/* Four short bars at the bottom: how far through the chapter the visitor is (no numbers). */
+.build-steps { position: absolute; left: max(clamp(1rem, 4vw, 4rem), calc((100vw - 1500px) / 2 + 2rem)); bottom: 2.5rem; display: flex; gap: 0.5rem; }
+.build-steps li { width: 2.5rem; height: 0.25rem; border-radius: 999px; background: var(--accent-deep); transition: background-color var(--dur-base) var(--ease-out); }
+.build-steps li[data-on="true"] { background: var(--accent-ink); }
+
+.build-list { display: grid; gap: 4rem; padding-top: 3rem; }

@@ -54,56 +54,86 @@ test("nav is a sticky pill with one accent CTA outside the section list", async 
   await expect(header.locator("nav").getByRole("link", { name: /let.s talk/i })).toHaveCount(0);
 });
 
-test("projects: wordmark h2, chips filter the tiles, each project appears once", async ({ page }) => {
+test("projects: wordmark h2, the orbit chips cover each project exactly once", async ({ page }) => {
   await page.goto("/");
   const section = page.locator("section#projects");
   await expect(section.locator("h2")).toHaveCount(1);
-  const tiles = section.locator('[data-testid="project-tile"]');
-  await expect(tiles).toHaveCount(projects.length);
-  const slugs = await tiles.evaluateAll((els) => els.map((e) => e.getAttribute("data-slug")));
+
+  const root = page.getByTestId("project-orbit");
+  await expect(root).toHaveAttribute("data-mode", "orbit");
+  await expect(root).toHaveAttribute("data-ready", "", { timeout: 15000 });
+  const chips = root.getByTestId("project-chips").locator("button[data-slug]");
+  await expect(chips).toHaveCount(projects.length);
+  const slugs = await chips.evaluateAll((els) => els.map((e) => e.getAttribute("data-slug")));
   expect(new Set(slugs).size).toBe(projects.length);
-  expect(slugs.sort()).toEqual(projects.map((p) => p.slug).sort());
+  expect(slugs).toEqual(projects.map((p) => p.slug));
+  await expect(root.getByTestId("project-list")).toHaveCount(0);
+  const firstChip = root.getByTestId("project-chips").locator(`button[data-slug="${projects[0].slug}"]`);
+  await expect(firstChip).toHaveAttribute("aria-pressed", "true");
+  await expect(root).toHaveAttribute("data-front", projects[0].slug);
 
-  const chips = section.getByTestId("project-chip");
-  const kinds = [...new Set(projects.map((p) => p.kind))];
-  await expect(chips).toHaveCount(kinds.length + 1);
-  await expect(chips.first()).toHaveText(/all/i);
-  await expect(chips.first()).toHaveAttribute("aria-pressed", "true");
-
-  for (const kind of kinds) {
-    await pressChip(chips.filter({ hasText: new RegExp(`^${kind}$`, "i") }));
-    await page.waitForTimeout(700);
-    const shown = await tiles.evaluateAll((els) => els.filter((e) => e.getClientRects().length > 0).map((e) => e.getAttribute("data-kind")));
-    expect(shown.length).toBeGreaterThan(0);
-    for (const k of shown) expect(k).toBe(kind);
+  const dialog = page.getByRole("dialog");
+  for (const p of projects.slice(1)) {
+    const chip = root.getByTestId("project-chips").locator(`button[data-slug="${p.slug}"]`);
+    await chip.scrollIntoViewIfNeeded();
+    await pressChip(chip);
+    await expect(firstChip).toHaveAttribute("aria-pressed", "false");
+    await expect(root).toHaveAttribute("data-front", p.slug);
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
   }
-  await pressChip(chips.first());
-  await page.waitForTimeout(700);
-  const all = await tiles.evaluateAll((els) => els.filter((e) => e.getClientRects().length > 0).length);
-  expect(all).toBe(projects.length);
+
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/");
+  const listRoot = page.getByTestId("project-orbit");
+  await expect(listRoot).toHaveAttribute("data-mode", "list");
+  const rows = listRoot.getByTestId("project-list").locator("li[data-slug]");
+  await expect(rows).toHaveCount(projects.length);
+  const listSlugs = await rows.evaluateAll((els) => els.map((e) => e.getAttribute("data-slug")));
+  expect(new Set(listSlugs).size).toBe(projects.length);
+  expect(listSlugs).toEqual(projects.map((p) => p.slug));
+  await expect(listRoot.getByTestId("project-chips")).toHaveCount(0);
 });
 
-test("tiles keep their real links reachable by keyboard and never render placeholders", async ({ page }) => {
+test("orbit panels keep their real links reachable by keyboard and never render placeholders", async ({ page }) => {
   await page.goto("/");
+  const root = page.getByTestId("project-orbit");
+  await expect(root).toHaveAttribute("data-ready", "", { timeout: 15000 });
+  const dialog = page.getByRole("dialog");
   for (const p of projects) {
-    const tile = page.locator(`[data-testid="project-tile"][data-slug="${p.slug}"]`);
-    const gh = tile.locator('a[href^="https://github.com"]');
+    const chip = root.getByTestId("project-chips").locator(`button[data-slug="${p.slug}"]`);
+    await chip.scrollIntoViewIfNeeded();
+    await expect(async () => {
+      await chip.focus();
+      await page.keyboard.press("Enter");
+      await expect(dialog).toBeVisible({ timeout: 800 });
+    }).toPass({ timeout: 10_000 });
+    const gh = dialog.locator('a[href^="https://github.com"]');
     if (p.github.startsWith("http")) {
       await expect(gh).toHaveCount(1);
       expect(await gh.evaluate((e) => (e as HTMLElement).tabIndex)).toBeGreaterThanOrEqual(0);
     } else {
       await expect(gh).toHaveCount(0);
     }
-    await expect(tile).not.toContainText("[");
-    await expect(tile.getByRole("heading", { name: p.title })).toHaveCount(1);
+    await expect(dialog).not.toContainText("[");
+    await expect(dialog.getByRole("heading", { name: p.title })).toHaveCount(1);
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
   }
 });
 
-test("tiles cover with the project's first screen when it has one", async ({ page }) => {
+test("orbit panels cover with the project's first screen when it has one", async ({ page }) => {
   await page.goto("/");
+  const root = page.getByTestId("project-orbit");
+  await expect(root).toHaveAttribute("data-ready", "", { timeout: 15000 });
   for (const p of projects.filter((x) => x.screens?.length)) {
-    const tile = page.locator(`[data-testid="project-tile"][data-slug="${p.slug}"]`);
-    await expect(tile.locator(`img[src="${p.screens![0].src}"]`)).toHaveCount(1);
+    const chip = root.getByTestId("project-chips").locator(`button[data-slug="${p.slug}"]`);
+    await chip.scrollIntoViewIfNeeded();
+    await pressChip(chip);
+    // The panel's main image is the project's first screen (the thumbnail strip repeats it, so not "exactly one").
+    await expect(page.getByRole("dialog").locator("img").first()).toHaveAttribute("src", p.screens![0].src);
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
   }
 });
 
@@ -113,65 +143,87 @@ test("no custom cursor anywhere", async ({ page }) => {
   expect(hidden).toBe(0);
 });
 
-test("the build cards show the four stack groups from data, no skill bars", async ({ page }) => {
-  await page.goto("/");
-  const cards = page.locator('section#build [data-testid="build-card"]');
-  await expect(cards).toHaveCount(4);
-  await expect(page.locator("section#build h2")).toHaveCount(1);
-  await expect(page.locator('[role="progressbar"], progress, meter')).toHaveCount(0);
-});
+const contrast = (a: number, b: number) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+const hexLum = (hex: string) => lumOf([1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)));
+function lumOf([r, g, b]: number[]) {
+  const [R, G, B] = [r, g, b].map((v) => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+}
 
-test("palette: accent is a light blue, paper is cream, nothing is purple", async ({ page }) => {
+test("palette: accent is a saturated cobalt, paper is cream, text on accent is paper, nothing is purple", async ({ page }) => {
   await page.goto("/");
   const tok = await page.evaluate(() => {
     const s = getComputedStyle(document.documentElement);
-    return { accent: s.getPropertyValue("--accent").trim().toLowerCase(), paper: s.getPropertyValue("--paper").trim().toLowerCase() };
+    const v = (n: string) => s.getPropertyValue(n).trim().toLowerCase();
+    return { accent: v("--accent"), paper: v("--paper"), onAccent: getComputedStyle(document.querySelector(".btn-primary")!).color };
   });
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(tok.accent.slice(i, i + 2), 16));
-  expect(b, "accent is blue-dominant").toBeGreaterThan(r + 40);
-  expect(b).toBeGreaterThan(g);
-  expect(r + g + b, "light enough for ink text").toBeGreaterThan(480);
+  expect(b, "accent is cobalt: blue far above red").toBeGreaterThan(r + 120);
+  expect(b, "accent is cobalt: blue far above green").toBeGreaterThan(g + 60);
+  expect(r, "not purple").toBeLessThan(80);
   expect(tok.paper).toMatch(/^#f/);
+  const onAccent = (tok.onAccent.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+  expect(contrast(lumOf(onAccent), hexLum(tok.accent)), "primary button text contrast").toBeGreaterThanOrEqual(4.5);
+  expect(contrast(hexLum(tok.paper), hexLum(tok.accent)), "paper on accent").toBeGreaterThanOrEqual(4.5);
 });
 
-test("reduced motion: hero, wordmarks and tiles are fully readable at first paint", async ({ browser }) => {
+test("reduced motion: hero, wordmarks and project rows are fully readable at first paint", async ({ browser }) => {
   const ctx = await browser.newContext({ reducedMotion: "reduce" });
   const page = await ctx.newPage();
   await page.goto("/");
   expect(await page.locator("h1").evaluate((e) => getComputedStyle(e).opacity)).toBe("1");
   const chars = await page.locator("h1 .ch").evaluateAll((els) => els.map((e) => getComputedStyle(e).opacity));
   for (const o of chars) expect(o).toBe("1");
-  const tile = page.locator('[data-testid="project-tile"]').first();
-  await tile.scrollIntoViewIfNeeded();
-  expect(await tile.evaluate((e) => getComputedStyle(e).opacity)).toBe("1");
+  const root = page.getByTestId("project-orbit");
+  await expect(root).toHaveAttribute("data-mode", "list");
+  const row = root.locator('[data-testid="project-list"] li[data-slug]').first();
+  await row.scrollIntoViewIfNeeded();
+  expect(await row.evaluate((e) => getComputedStyle(e).opacity)).toBe("1");
+  await expect(root.locator("canvas")).toHaveCount(0);
   const floatT = await page.locator('[data-testid="float-object"]').first().evaluate((e) => getComputedStyle(e).animationName);
   expect(floatT, "floating objects are still").toBe("none");
   await ctx.close();
 });
 
-test("mobile 375px: no horizontal scroll, filter chips reachable, tiles single column", async ({ page }) => {
+test("mobile 375px: no horizontal scroll, project rows reachable, single column", async ({ page }) => {
   const errors = trackErrors(page);
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/");
   await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 500) { window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 50)); } });
   expect(await noHorizontalScroll(page)).toBe(true);
-  const xs = await page.locator('[data-testid="project-tile"]').evaluateAll((els) => els.filter((e) => e.getClientRects().length).map((e) => Math.round(e.getBoundingClientRect().left)));
-  expect(new Set(xs).size, "one column").toBe(1);
+  const rows = page.locator('[data-testid="project-list"] li[data-slug]');
+  const lefts = await rows.evaluateAll((els) => els.filter((e) => e.getClientRects().length).map((e) => Math.round(e.getBoundingClientRect().left)));
+  expect(new Set(lefts).size, "one column").toBe(1);
+  for (const row of await rows.all()) {
+    await expect(row.locator("button")).toHaveCount(1);
+    const box = await row.locator("button").boundingBox();
+    expect(box?.height, "row button is a real tap target").toBeGreaterThanOrEqual(44);
+  }
   expect(errors).toEqual([]);
 });
 
-test("project tiles are light and flow with the page (no dark navy blocks)", async ({ page }) => {
+test("project rows are light and the panel is light too (no dark navy blocks)", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
   await page.goto("/");
   const lum = (rgb: string) => {
     const [r, g, b] = (rgb.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number).map((v) => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; });
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   };
-  for (const tile of await page.locator('[data-testid="project-tile"]').all()) {
-    const bg = await tile.evaluate((e) => getComputedStyle(e).backgroundColor);
-    expect(lum(bg), `tile bg ${bg}`).toBeGreaterThan(0.8);
-    const color = await tile.evaluate((e) => getComputedStyle(e).color);
-    expect(lum(color), "tile text is dark ink").toBeLessThan(0.1);
+  const rows = page.locator('[data-testid="project-list"] li[data-slug]');
+  for (const row of await rows.all()) {
+    const bg = await row.evaluate((e) => getComputedStyle(e).backgroundColor);
+    expect(lum(bg), `row bg ${bg}`).toBeGreaterThan(0.8);
+    const color = await row.evaluate((e) => getComputedStyle(e).color);
+    expect(lum(color), "row text is dark ink").toBeLessThan(0.1);
   }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const root = page.getByTestId("project-orbit");
+  await expect(root).toHaveAttribute("data-ready", "", { timeout: 15000 });
+  await pressChip(root.getByTestId("project-chips").locator(`button[data-slug="${projects[0].slug}"]`));
+  const dialog = page.getByRole("dialog");
+  const dbg = await dialog.evaluate((e) => getComputedStyle(e).backgroundColor);
+  expect(lum(dbg), `panel bg ${dbg}`).toBeGreaterThan(0.8);
 });
 
 const lum = (rgb: string) => {
@@ -179,45 +231,24 @@ const lum = (rgb: string) => {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 };
 
-test("what-I-build: four light cards that stack (sticky) on desktop", async ({ page }) => {
+test("cobalt chapters are #build, #now and the footer; every other section is light; none is black", async ({ page }) => {
   await page.goto("/");
-  const cards = page.locator('[data-testid="build-card"]');
-  await expect(cards).toHaveCount(4);
-  for (const card of await cards.all()) {
-    expect(lum(await card.evaluate((e) => getComputedStyle(e).backgroundColor))).toBeGreaterThan(0.8);
-    expect(await card.locator("xpath=ancestor::li[1]").evaluate((e) => getComputedStyle(e).position), "stacks with sticky").toBe("sticky");
-  }
-});
-
-test("no dark chapters: every section background is light", async ({ page }) => {
-  await page.goto("/");
-  const bgs = await page.$$eval("main section, footer", (els) => els.map((e) => getComputedStyle(e).backgroundColor));
-  for (const bg of bgs) {
+  const accent = await page.evaluate(() => {
+    const d = document.createElement("div");
+    d.style.color = "var(--accent)";
+    document.body.append(d);
+    const c = getComputedStyle(d).color;
+    d.remove();
+    return c;
+  });
+  const rows = await page.$$eval("main section, footer", (els) => els.map((e) => ({ id: e.id || e.tagName.toLowerCase(), bg: getComputedStyle(e).backgroundColor })));
+  const cobalt = rows.filter((r) => r.bg === accent).map((r) => r.id).sort();
+  expect(cobalt).toEqual(["build", "footer", "now"]);
+  for (const { id, bg } of rows) {
+    if (cobalt.includes(id)) continue;
     const alpha = bg.startsWith("rgba") ? Number(bg.split(",")[3]) : 1;
-    if (alpha > 0) expect(lum(bg), `section bg ${bg}`).toBeGreaterThan(0.4);
+    if (alpha > 0) expect(lum(bg), `section ${id} bg ${bg}`).toBeGreaterThan(0.4);
   }
-});
-
-test("tech strip: logos with small black captions, no marquee", async ({ page }) => {
-  await page.goto("/");
-  await expect(page.getByTestId("ribbon")).toHaveCount(0);
-  const strip = page.getByTestId("stack-icons");
-  await strip.scrollIntoViewIfNeeded();
-  const items = strip.locator("li");
-  expect(await items.count()).toBeGreaterThanOrEqual(12);
-  await page.waitForTimeout(800);
-  for (const li of await items.all()) {
-    const img = li.locator("img");
-    await expect(img).toHaveAttribute("alt", "");
-    expect(await img.evaluate((e) => (e as HTMLImageElement).complete && (e as HTMLImageElement).naturalWidth), "logo loads").toBeGreaterThan(0);
-    const cap = li.locator("span");
-    expect(await cap.evaluate((e) => parseFloat(getComputedStyle(e).fontSize)), "caption is small").toBeLessThanOrEqual(13);
-    expect(lum(await cap.evaluate((e) => getComputedStyle(e).color)), "caption is black").toBeLessThan(0.05);
-  }
-  const names = await items.locator("span").allTextContents();
-  expect(names).toEqual(expect.arrayContaining(["Python", "Node.js", "TypeScript", "AWS"]));
-  const anim = await strip.evaluate((e) => [e, ...e.querySelectorAll("*")].some((n) => getComputedStyle(n).animationName !== "none"));
-  expect(anim, "calm: nothing animates here").toBe(false);
 });
 
 test("about: the statement is word-by-word (scroll lit) and fully readable under reduced motion", async ({ browser }) => {
@@ -231,17 +262,18 @@ test("about: the statement is word-by-word (scroll lit) and fully readable under
   await ctx.close();
 });
 
-test("projects bento: first tile is wide, each tile carries its 3D object, filter resets spans", async ({ page }) => {
+test("the orbit does not reuse the 3D icons: one canvas, no tile objects", async ({ page }) => {
   await page.goto("/");
-  const tiles = page.locator('[data-testid="project-tile"]');
-  const w = await tiles.evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width));
-  expect(w[0], "feature tile is wider").toBeGreaterThan(w[1] * 1.6);
-  expect(await page.getByTestId("tile-object").count()).toBe(await tiles.count());
-  for (const o of await page.getByTestId("tile-object").all()) await expect(o).toHaveAttribute("aria-hidden", "true");
-  await pressChip(page.getByTestId("project-chip").filter({ hasText: /^Web$/ }));
-  await page.waitForTimeout(800);
-  const vis = await tiles.evaluateAll((els) => els.filter((e) => e.getClientRects().length).map((e) => Math.round(e.getBoundingClientRect().width)));
-  expect(new Set(vis).size, "uniform widths while filtered").toBe(1);
+  const root = page.getByTestId("project-orbit");
+  await expect(root).toHaveAttribute("data-mode", "orbit");
+  await expect(root).toHaveAttribute("data-ready", "", { timeout: 15000 });
+  await expect(root.locator("canvas")).toHaveCount(1);
+  await expect(root.locator('img[src^="/3d/"]')).toHaveCount(0);
+  await expect(page.getByTestId("tile-object")).toHaveCount(0);
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/");
+  await expect(page.getByTestId("project-orbit")).toHaveAttribute("data-mode", "list");
+  await expect(page.getByTestId("project-orbit").locator('img[src^="/3d/"]')).toHaveCount(0);
 });
 
 test("hero objects react to the pointer (native translate), calm without hover", async ({ page }) => {

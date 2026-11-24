@@ -3,6 +3,8 @@ import { ArrowDown } from "lucide-react";
 import Parallax from "@/components/motion/Parallax";
 import PointerDepth from "@/components/motion/PointerDepth";
 import RevealHeading from "@/components/motion/RevealHeading";
+import ScrollSpread from "@/components/motion/ScrollSpread";
+import HeroBlobGate from "@/components/hero/HeroBlobGate";
 import FloatingObjects, { type FloatingObject } from "@/components/ui/FloatingObjects";
 import { profile } from "@/data/profile";
 import { buttonPrimary, buttonSecondary, buttonSecondaryMuted } from "@/components/ui/button";
@@ -14,10 +16,10 @@ function isPlaceholder(value: string) {
 const firstName = profile.name.split(" ")[0];
 
 const objects: FloatingObject[] = [
-  { name: "laptop", className: "left-[4%] top-[8%] w-20 sm:w-32 lg:w-44", speed: 0.7, rot: -7, dy: -16, dur: 7, depth: 34 },
-  { name: "terminal", className: "left-[16%] top-[42%] w-16 sm:w-24 lg:w-32", speed: 0.35, rot: 5, dy: -12, dur: 8.5, delay: 1.2, depth: 18 },
-  { name: "phone", className: "right-[5%] top-[12%] w-16 sm:w-28 lg:w-40", speed: 0.55, rot: 8, dy: -18, dur: 6.5, delay: 0.6, depth: 40 },
-  { name: "watch", className: "right-[17%] top-[34%] w-14 sm:w-24 lg:w-32", speed: 0.25, rot: -6, dy: -10, dur: 9, delay: 2, depth: 22 },
+  { name: "laptop", className: "left-[4%] top-[8%] w-20 sm:w-32 lg:w-44", speed: 0.7, drift: -1.3, rot: -7, dy: -16, dur: 7, depth: 34 },
+  { name: "terminal", className: "left-[16%] top-[42%] w-16 sm:w-24 lg:w-32", speed: 0.35, drift: -1, rot: 5, dy: -12, dur: 8.5, delay: 1.2, depth: 18 },
+  { name: "phone", className: "right-[5%] top-[12%] w-16 sm:w-28 lg:w-40", speed: 0.55, drift: 1.3, rot: 8, dy: -18, dur: 6.5, delay: 0.6, depth: 40 },
+  { name: "watch", className: "right-[17%] top-[34%] w-14 sm:w-24 lg:w-32", speed: 0.25, drift: 1, rot: -6, dy: -10, dur: 9, delay: 2, depth: 22 },
 ];
 
 // Signature moment: the name as a giant wordmark, the cut-out portrait standing in
@@ -29,13 +31,15 @@ export default function Hero() {
        <PointerDepth className="relative">
         <div
           aria-hidden
+          data-testid="hero-glow"
           className="pointer-events-none absolute left-1/2 top-[10%] h-[64vw] max-h-[920px] w-[64vw] max-w-[920px] -translate-x-1/2 rounded-full"
-          style={{ background: "radial-gradient(closest-side, rgb(156 196 255 / 0.6), rgb(156 196 255 / 0.18) 55%, transparent)" }}
+          style={{ background: "radial-gradient(closest-side, color-mix(in oklab, var(--accent) 45%, transparent), color-mix(in oklab, var(--accent) 12%, transparent) 55%, transparent)" }}
         />
+        <HeroBlobGate className="pointer-events-none absolute left-1/2 top-[6%] z-0 h-[50vw] max-h-[720px] w-[50vw] max-w-[720px] -translate-x-1/2" />
         <div data-layer className="relative z-0">
-          <div data-testid="hero-wordmark" aria-hidden="true" className="wordmark wordmark-hero text-center">
+          <ScrollSpread data-testid="hero-wordmark" aria-hidden="true" className="wordmark wordmark-hero text-center">
             <RevealHeading as="p" text={firstName} />
-          </div>
+          </ScrollSpread>
         </div>
 
         <FloatingObjects items={objects} />
@@ -73,7 +77,15 @@ export default function Hero() {
                   Download CV <span className="soon">Soon</span>
                 </button>
               ) : (
-                <a href={profile.cvUrl} data-cta className={buttonSecondary}>
+                <a
+                  href={profile.cvUrl}
+                  data-cta
+                  className={buttonSecondary}
+                  download
+                  {...(profile.cvUrl.startsWith("http")
+                    ? { target: "_blank", rel: "noopener noreferrer" }
+                    : {})}
+                >
                   Download CV
                 </a>
               )}

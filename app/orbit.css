@@ -1,0 +1,28 @@
+/* Project orbit. The track is the timeline: 40svh of scroll per project, plus one screen for the
+   stage. The stage sticks while the orbit turns. In list mode (phones, reduced motion, no WebGL)
+   none of this renders. */
+/* Full-bleed (like the Build stage) and set below a stretch of the section's cobalt-to-white fade. */
+.orbit-track { position: relative; height: calc(var(--steps, 5) * 40svh + 100svh); margin-inline: calc(50% - 50vw); margin-top: 55vh; }
+#projects { overflow-x: clip; }
+.orbit-stage { position: sticky; top: 0; height: 100svh; overflow: clip; --gutter: max(clamp(1rem, 4vw, 4rem), calc((100vw - 80rem) / 2 + 2rem)); }
+/* The field dissolves into the section at its top and bottom edges (Nico 2026-11-23: no hard block
+   cutting to the next phase). A mask only reads alpha, so the keywords below carry no colour. */
+.orbit-canvas {
+  position: absolute; inset: 0;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, black 22%, black 80%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, black 22%, black 80%, transparent 100%);
+}
+
+/* Words stay real HTML over the canvas, never baked into the scene. */
+.orbit-hud { position: absolute; left: var(--gutter); right: var(--gutter); bottom: 2.5rem; display: flex; flex-direction: column; gap: 1.5rem; pointer-events: none; }
+.orbit-hud > * { pointer-events: auto; }
+.orbit-caption { pointer-events: none; display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+.orbit-kind { display: block; margin-bottom: 0.75rem; font-size: 0.875rem; font-weight: 700; color: var(--ink-2); }
+.orbit-title {
+  display: block; font-family: var(--font-bricolage), system-ui, sans-serif; font-weight: 800;
+  letter-spacing: -0.04em; line-height: 0.9; font-size: clamp(2.25rem, 6vw, 5.5rem); color: var(--ink);
+}
+.orbit-count {
+  font-family: var(--font-bricolage), system-ui, sans-serif; font-weight: 800; letter-spacing: -0.04em;
+  font-size: clamp(1.5rem, 3vw, 2.5rem); color: var(--taupe); white-space: nowrap;
+}

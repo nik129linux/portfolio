@@ -8,6 +8,8 @@ export type FloatingObject = {
   /** Tailwind position + size classes, e.g. "left-[6%] top-[14%] w-24 sm:w-36" */
   className: string;
   speed: number;
+  /** horizontal scatter on scroll: negative moves left, positive right (same scale as speed) */
+  drift?: number;
   /** drift rotation in degrees, drift distance in px, loop seconds, start delay seconds */
   rot?: number;
   dy?: number;
@@ -29,7 +31,7 @@ export default function FloatingObjects({ items }: { items: FloatingObject[] }) 
         const file = path.join(process.cwd(), "public/3d", `${o.name}.png`);
         const has = fs.existsSync(file);
         return (
-          <ParallaxLayer key={o.name} speed={o.speed} className={`pointer-events-none absolute ${o.className}`}>
+          <ParallaxLayer key={o.name} speed={o.speed} drift={o.drift} className={`pointer-events-none absolute ${o.className}`}>
             <div
               data-testid="float-object"
               aria-hidden="true"

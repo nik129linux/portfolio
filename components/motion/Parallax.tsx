@@ -19,15 +19,19 @@ export default function Parallax({ children, className }: { children: ReactNode;
 
 export function ParallaxLayer({
   speed,
+  drift = 0,
   children,
   className,
 }: {
   speed: number;
+  /** horizontal travel over the same progress, so layers can scatter outward */
+  drift?: number;
   children: ReactNode;
   className?: string;
 }) {
   const progress = useContext(ProgressContext);
   const y = useTransform(progress as MotionValue<number>, (v) => v * speed * 240);
+  const x = useTransform(progress as MotionValue<number>, (v) => v * drift * 240);
 
   // Effect-only matchMedia (SSR and first client render agree; CSS in
   // globals.css forces no-transform from first paint under reduced motion).
@@ -49,7 +53,7 @@ export function ParallaxLayer({
   }
 
   return (
-    <motion.div data-speed={speed} style={{ y }} className={className}>
+    <motion.div data-speed={speed} style={{ x, y }} className={className}>
       {children}
     </motion.div>
   );
