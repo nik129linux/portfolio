@@ -76,7 +76,7 @@ export const projects: Project[] = [
     proof: ["Built with two teammates: 130+ commits and a real merge history through pull requests.", "Smoke test drives title, cutscene, every level, boss and ending, and fails on any console error.", "Adaptive enemy AI covered by its own fairness gates."],
     stack: ["Three.js", "JavaScript", "ES modules"],
     github: "https://github.com/nik129linux/lumenfall",
-    demo: "[DEMO_URL_LUMENFALL]",
+    demo: "https://lumenfall.acompana-mobile.workers.dev",
     media: "/projects/placeholder.svg",
     collaboration: true,
   },
