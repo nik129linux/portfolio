@@ -6,6 +6,11 @@ import RevealHeading from "@/components/motion/RevealHeading";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { nav } from "@/data/nav";
 import { buttonPrimary } from "@/components/ui/button";
+import { profile } from "@/data/profile";
+
+// AWS Lambda function URL (infra/contact). Public by design: it only accepts a validated message.
+const CONTACT_URL =
+  process.env.NEXT_PUBLIC_CONTACT_URL ?? "https://ngjcjvp4xrm3gnxlbezqr4wfdy0ppuua.lambda-url.us-east-1.on.aws/";
 
 const sectionLabel = nav.find((item) => item.id === "contact")?.label ?? "Contact";
 
@@ -17,15 +22,18 @@ export default function Contact() {
   const [values, setValues] = useState({ name: "", email: "", message: "" });
   const [errors, setErrors] = useState<Errors>({});
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   function update(field: keyof typeof values) {
     return (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setValues((current) => ({ ...current, [field]: event.target.value }));
       setSent(false);
+      setFailed(false);
     };
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const next: Errors = {};
@@ -36,7 +44,25 @@ export default function Contact() {
     if (!values.message.trim()) next.message = "Add a short message.";
 
     setErrors(next);
-    if (Object.keys(next).length === 0) setSent(true);
+    if (Object.keys(next).length > 0) return;
+
+    setSending(true);
+    setFailed(false);
+    try {
+      const form = new FormData(event.currentTarget);
+      const response = await fetch(CONTACT_URL, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ...values, website: form.get("website") ?? "" }),
+      });
+      if (!response.ok) throw new Error(String(response.status));
+      setSent(true);
+      setValues({ name: "", email: "", message: "" });
+    } catch {
+      setFailed(true);
+    } finally {
+      setSending(false);
+    }
   }
 
   const messages = [errors.name, errors.email, errors.message].filter(Boolean);
@@ -136,11 +162,19 @@ export default function Contact() {
               </p>
             ) : null}
 
+            <div aria-hidden className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+              <label>
+                Leave this empty
+                <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+              </label>
+            </div>
+
             <button
               type="submit"
+              disabled={sending}
               className={`mt-6 w-full sm:w-auto ${buttonPrimary}`}
             >
-              Send message
+              {sending ? "Sending..." : "Send message"}
             </button>
 
             {sent ? (
@@ -148,7 +182,17 @@ export default function Contact() {
                 role="status"
                 className="mt-4 rounded-xl bg-paper px-4 py-3 text-base text-ink"
               >
-                Thanks, your message is ready. I will reply by email.
+                Thanks, your message was sent. I will reply by email.
+              </p>
+            ) : null}
+
+            {failed ? (
+              <p role="alert" className="mt-4 rounded-xl bg-paper px-4 py-3 text-base text-ink">
+                Could not send it. Email me directly at{" "}
+                <a className="font-semibold underline" href={`mailto:${profile.email}`}>
+                  {profile.email}
+                </a>
+                .
               </p>
             ) : null}
           </form>
