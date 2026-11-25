@@ -1,9 +1,11 @@
 export type NowData = {
   intro: string;
+  updated: string; // shown next to the live dot, e.g. "Nov 2026"
   items: { label: string; value: string }[];
 };
 
 export const now: NowData = {
+  updated: "Nov 2026",
   intro: "I build AI features that survive production: tested, bounded by consent and deployed, not demoed once.",
   items: [
     { label: "Shipping", value: "AI as a swappable layer: provider chains, fallbacks and consent gates in CanTrack, CotizaIA, Acompaña and Retoma, plus a CLIP vision check." },

@@ -35,6 +35,6 @@ export type Project = {
   device?: "laptop" | "phone" | "watch" | "monitor";
 };
 
-export type Testimonial = { name: string; role: string; quote: string; photo?: string };
+export type Testimonial = { name: string; role: string; quote: string; highlight?: string; photo?: string }; // highlight: exact substring of quote that gets the marker
 
-export type ExperienceItem = { type: "academic" | "work"; title: string; place: string; start: string; end: string; detail: string };
+export type ExperienceItem = { type: "academic" | "work"; title: string; place: string; start: string; end: string; detail: string; projects?: string[] }; // projects: slugs from data/projects.ts shown when the entry is opened

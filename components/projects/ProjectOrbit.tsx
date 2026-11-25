@@ -7,6 +7,7 @@ import ProjectChips from "./ProjectChips";
 import ProjectDetail from "./ProjectDetail";
 import ProjectList from "./ProjectList";
 import useOrbitProgress from "./useOrbitProgress";
+import { OPEN_PROJECT } from "./openProject";
 import { hasWebGL } from "@/components/motion/useSceneMode";
 import "@/app/orbit.css";
 
@@ -64,6 +65,19 @@ export default function ProjectOrbit({ projects }: { projects: Project[] }) {
     return () => io.disconnect();
   }, [effective]);
 
+  // Other sections open a project through openProject(slug); see ./openProject.ts.
+  const external = useRef(false);
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const slug = (e as CustomEvent<string>).detail;
+      if (!projects.some((p) => p.slug === slug)) return;
+      external.current = true;
+      setSelected(slug);
+    };
+    window.addEventListener(OPEN_PROJECT, onOpen);
+    return () => window.removeEventListener(OPEN_PROJECT, onOpen);
+  }, [projects]);
+
   const selectedProject = projects.find((p) => p.slug === selected) ?? null;
 
   // Closing a project the orbit was turned to by a click keeps the page on it, so the orbit does not
@@ -71,6 +85,11 @@ export default function ProjectOrbit({ projects }: { projects: Project[] }) {
   const close = useCallback(() => {
     const slug = selected;
     setSelected(null);
+    // Opened from another section (Experience): leave the visitor where they are.
+    if (external.current) {
+      external.current = false;
+      return;
+    }
     const track = trackRef.current;
     if (!slug || !track || n < 2) return;
     const index = projects.findIndex((p) => p.slug === slug);

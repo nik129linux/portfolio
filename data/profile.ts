@@ -8,7 +8,7 @@ export const profile: Profile = {
   heroLine: "I build backends that talk to AI.",
   heroSub: "Python and TypeScript, FastAPI and Next.js, shipped to the cloud.",
   photo: "/photo.webp",
-  cvUrl: "[CV_GOOGLE_DRIVE_URL]",
+  cvUrl: "https://drive.google.com/file/d/1O-xxtUFwyhXQzU6tf34W9sHUZrhsZves/view?usp=sharing",
   about: ["I am someone who wants to help build a better world by helping others learn new things.", "I want to help shape where AI goes. I am building toward a career delivering useful AI solutions."],
   hobbies: ["Drawing", "Philosophy", "Teaching"],
   stack: [
